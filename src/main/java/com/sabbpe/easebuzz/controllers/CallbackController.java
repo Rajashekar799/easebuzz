@@ -1,13 +1,12 @@
 package com.sabbpe.easebuzz.controllers;
 
-import com.sabbpe.easebuzz.exceptions.InvalidHashException;
 import com.sabbpe.easebuzz.services.PaymentService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.Map;
 
 @Slf4j
@@ -18,32 +17,43 @@ public class CallbackController {
 
     private final PaymentService paymentService;
 
-    @PostMapping(
+    /**
+     * Easebuzz Callback Endpoint
+     * Supports both GET and POST
+     */
+    @RequestMapping(
             value = "/callback",
-            consumes = "application/x-www-form-urlencoded"
+            method = {RequestMethod.POST, RequestMethod.GET}
     )
-    public ResponseEntity<Map<String, String>> handleCallback(
-            @RequestParam Map<String, String> callbackData,
-            HttpServletRequest request) {
+    public Map<String, Object> handleCallback(HttpServletRequest request) {
 
-        String txnId = callbackData.get("txnid");
-        String status = callbackData.get("status");
-        String amount = callbackData.get("amount");
-        String mode = callbackData.get("mode");
-        String clientIp = request.getRemoteAddr();
+        Map<String, String> callbackData = new HashMap<>();
 
-        log.info("Easebuzz callback received | txnId={} | status={} | amount={} | mode={} | IP={}",
-                txnId, status, amount, mode, clientIp);
+        // Extract all parameters from request
+        request.getParameterMap().forEach((key, value) -> {
+            if (value != null && value.length > 0) {
+                callbackData.put(key, value[0]);
+            }
+        });
+
+        log.info("Easebuzz callback received | txnId={} | status={} | amount={} | mode={}",
+                callbackData.get("txnid"),
+                callbackData.get("status"),
+                callbackData.get("amount"),
+                callbackData.get("mode")
+        );
 
         try {
             paymentService.processCallback(callbackData);
-        } catch (InvalidHashException e) {
-            log.error("Invalid hash detected for txnId={} | reason={}", txnId, e.getMessage());
         } catch (Exception e) {
-            log.error("Unexpected error while processing callback txnId={}", txnId, e);
+            log.error("Error processing Easebuzz callback for txnId={}",
+                    callbackData.get("txnid"), e);
         }
 
         // Always return 200 so gateway does not retry
-        return ResponseEntity.ok(Map.of("message", "Received"));
+        return Map.of(
+                "success", true,
+                "message", "Callback processed successfully"
+        );
     }
 }
