@@ -181,20 +181,34 @@ public class PaymentService {
 if (!hashValid) {
     finalPaymentStatus = "HASH_MISMATCH";
 }
-else if ("success".equalsIgnoreCase(status)) {
-    finalPaymentStatus = "SUCCESS";
-}
-else if ("failure".equalsIgnoreCase(status)) {
-    finalPaymentStatus = "FAILED";
-}
-else if ("userCancelled".equalsIgnoreCase(status)) {
-    finalPaymentStatus = "CANCELLED";
-}
-else if ("pending".equalsIgnoreCase(status)) {
-    finalPaymentStatus = "PENDING";
-}
 else {
-    finalPaymentStatus = "UNKNOWN";
+
+    switch (status.toLowerCase()) {
+
+        case "success":
+            finalPaymentStatus = "SUCCESS";
+            break;
+
+        case "failure":
+            finalPaymentStatus = "FAILED";
+            break;
+
+        case "usercancelled":
+        case "cancel":
+            finalPaymentStatus = "CANCELLED";
+            break;
+
+        case "timeout":
+            finalPaymentStatus = "TIMEOUT";
+            break;
+
+        case "pending":
+            finalPaymentStatus = "PENDING";   // For delayed success/failure
+            break;
+
+        default:
+            finalPaymentStatus = "UNKNOWN";
+    }
 }
 
 

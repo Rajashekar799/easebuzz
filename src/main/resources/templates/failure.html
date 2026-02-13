@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Payment Failed</title>
+</head>
+<body>
+
+<h2 style="color:red;">Payment Failed ❌</h2>
+
+<div th:if="${payment != null}">
+    <p><strong>Transaction ID:</strong> <span th:text="${payment.txnId}"></span></p>
+    <p><strong>Status:</strong> <span th:text="${payment.paymentStatus}"></span></p>
+</div>
+
+</body>
+</html>
