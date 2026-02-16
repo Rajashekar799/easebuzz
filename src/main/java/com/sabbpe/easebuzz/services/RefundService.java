@@ -20,7 +20,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sabbpe.easebuzz.dto.RefundRequest;
 import com.sabbpe.easebuzz.dto.RefundStatusRequest;
 import com.sabbpe.easebuzz.dto.RefundV2Request;
-import com.sabbpe.easebuzz.services.EasebuzzDbLogger;
+// ...existing code...
 import com.sabbpe.easebuzz.utils.EasebuzzLogger;
 import com.sabbpe.easebuzz.utils.HashUtil;
 import com.sabbpe.easebuzz.utils.ValueUtil;
@@ -82,11 +82,11 @@ public class RefundService {
         body.put("udf7", req.getUdf7());
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity entity = new HttpEntity(body, (MultiValueMap)headers);
-        ResponseEntity response = this.restTemplate.exchange(this.refundUrl, HttpMethod.POST, entity, Map.class, new Object[0]);
+        HttpEntity<LinkedHashMap<String, String>> entity = new HttpEntity<>(body, headers);
+        ResponseEntity<Map<String, Object>> response = this.restTemplate.exchange(this.refundUrl, HttpMethod.POST, entity, (Class<Map<String, Object>>) (Class<?>) Map.class, new Object[0]);
         EasebuzzLogger.log("Refund API", req, hashValue, body, this.refundUrl, response.getBody());
         this.dbLogger.saveLog(finalKey, finalSalt, req, hashValue, body, this.refundUrl, response.getBody());
-        return (Map)response.getBody();
+        return response.getBody();
     }
 
     public Map<String, Object> refundV2(RefundV2Request req) {
@@ -115,11 +115,11 @@ public class RefundService {
         }
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity entity = new HttpEntity(body, (MultiValueMap)headers);
-        ResponseEntity response = this.restTemplate.exchange(this.refundV2Url, HttpMethod.POST, entity, Map.class, new Object[0]);
+        HttpEntity<LinkedHashMap<String, Object>> entity = new HttpEntity<>(body, headers);
+        ResponseEntity<Map<String, Object>> response = this.restTemplate.exchange(this.refundV2Url, HttpMethod.POST, entity, (Class<Map<String, Object>>) (Class<?>) Map.class, new Object[0]);
         EasebuzzLogger.log("V2 Refund", clientPayload, hashValue, body, this.refundV2Url, response.getBody());
         this.dbLogger.saveLog(finalKey, finalSalt, clientPayload, hashValue, body, this.refundV2Url, response.getBody());
-        return (Map)response.getBody();
+        return response.getBody();
     }
 
     public Map<String, Object> refundStatus(RefundStatusRequest req) {
@@ -135,12 +135,12 @@ public class RefundService {
         body.put("hash", hashValue);
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity entity = new HttpEntity(body, (MultiValueMap)headers);
+        HttpEntity<LinkedHashMap<String, String>> entity = new HttpEntity<>(body, headers);
         try {
-            ResponseEntity response = this.restTemplate.exchange(this.refundStatusUrl, HttpMethod.POST, entity, Map.class, new Object[0]);
+            ResponseEntity<Map<String, Object>> response = this.restTemplate.exchange(this.refundStatusUrl, HttpMethod.POST, entity, (Class<Map<String, Object>>) (Class<?>) Map.class, new Object[0]);
             EasebuzzLogger.log("Refund Status API", clientPayload, hashValue, body, this.refundStatusUrl, response.getBody());
             this.dbLogger.saveLog(finalKey, finalSalt, clientPayload, hashValue, body, this.refundStatusUrl, response.getBody());
-            return (Map)response.getBody();
+            return response.getBody();
         }
         catch (HttpClientErrorException ex) {
             Object errorResponse;

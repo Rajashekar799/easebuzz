@@ -22,7 +22,7 @@ import com.sabbpe.easebuzz.dto.RetrieveRequest;
 import com.sabbpe.easebuzz.dto.TransactionV1ByDate;
 import com.sabbpe.easebuzz.dto.TransactionV2ByDateRequest;
 import com.sabbpe.easebuzz.dto.TransactionV2Request;
-import com.sabbpe.easebuzz.services.EasebuzzDbLogger;
+// ...existing code...
 import com.sabbpe.easebuzz.utils.EasebuzzLogger;
 import com.sabbpe.easebuzz.utils.HashUtil;
 import com.sabbpe.easebuzz.utils.ValueUtil;
@@ -70,20 +70,20 @@ public class TransactionService {
         String finalSalt = ValueUtil.pick(req.getSalt(), this.salt);
         String plain = String.join((CharSequence)"|", finalKey, req.getTxnid(), req.getAmount(), req.getEmail(), req.getPhone(), finalSalt);
         String hash = HashUtil.sha512Hex(plain);
-        LinkedMultiValueMap body = new LinkedMultiValueMap();
-        body.add((Object)"key", (Object)finalKey);
-        body.add((Object)"txnid", (Object)req.getTxnid());
-        body.add((Object)"amount", (Object)req.getAmount());
-        body.add((Object)"email", (Object)req.getEmail());
-        body.add((Object)"phone", (Object)req.getPhone());
-        body.add((Object)"hash", (Object)hash);
+        LinkedMultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        body.add("key", finalKey);
+        body.add("txnid", req.getTxnid());
+        body.add("amount", req.getAmount());
+        body.add("email", req.getEmail());
+        body.add("phone", req.getPhone());
+        body.add("hash", hash);
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-        HttpEntity entity = new HttpEntity((Object)body, (MultiValueMap)headers);
-        ResponseEntity response = this.restTemplate.exchange(this.transactionV1Url, HttpMethod.POST, entity, Map.class, new Object[0]);
+        HttpEntity<LinkedMultiValueMap<String, Object>> entity = new HttpEntity<>(body, headers);
+        ResponseEntity<Map<String, Object>> response = this.restTemplate.exchange(this.transactionV1Url, HttpMethod.POST, entity, (Class<Map<String, Object>>) (Class<?>) Map.class, new Object[0]);
         EasebuzzLogger.log("V1 Transaction", req, hash, body, this.transactionV1Url, response.getBody());
         this.dbLogger.saveLog(finalKey, finalSalt, req, hash, body, this.transactionV1Url, response.getBody());
-        return (Map)response.getBody();
+        return response.getBody();
     }
 
     public Map<String, Object> getTransactionV1ByDate(TransactionV1ByDate req) {
@@ -91,19 +91,19 @@ public class TransactionService {
         String finalSalt = ValueUtil.pick(req.getSalt(), this.salt);
         String plain = String.join((CharSequence)"|", finalKey, req.getMerchant_email(), req.getTransaction_date(), finalSalt);
         String hash = HashUtil.sha512Hex(plain);
-        LinkedMultiValueMap body = new LinkedMultiValueMap();
-        body.add((Object)"merchant_key", (Object)finalKey);
-        body.add((Object)"transaction_date", (Object)req.getTransaction_date());
-        body.add((Object)"merchant_email", (Object)req.getMerchant_email());
-        body.add((Object)"hash", (Object)hash);
-        body.add((Object)"submerchant_id", (Object)req.getSubmerchant_id());
+        LinkedMultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        body.add("merchant_key", finalKey);
+        body.add("transaction_date", req.getTransaction_date());
+        body.add("merchant_email", req.getMerchant_email());
+        body.add("hash", hash);
+        body.add("submerchant_id", req.getSubmerchant_id());
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-        HttpEntity entity = new HttpEntity((Object)body, (MultiValueMap)headers);
-        ResponseEntity response = this.restTemplate.exchange(this.transactionV1DateUrl, HttpMethod.POST, entity, Map.class, new Object[0]);
+        HttpEntity<LinkedMultiValueMap<String, Object>> entity = new HttpEntity<>(body, headers);
+        ResponseEntity<Map<String, Object>> response = this.restTemplate.exchange(this.transactionV1DateUrl, HttpMethod.POST, entity, (Class<Map<String, Object>>) (Class<?>) Map.class, new Object[0]);
         EasebuzzLogger.log("V1 By Date Transaction", req, hash, body, this.transactionV1DateUrl, response.getBody());
         this.dbLogger.saveLog(finalKey, finalSalt, req, hash, body, this.transactionV1DateUrl, response.getBody());
-        return (Map)response.getBody();
+        return response.getBody();
     }
 
     public Map<String, Object> getTransactionV2(TransactionV2Request req) {
@@ -111,17 +111,17 @@ public class TransactionService {
         String finalSalt = ValueUtil.pick(req.getSalt(), this.salt);
         String plain = String.join((CharSequence)"|", finalKey, req.getTxnid(), finalSalt);
         String hash = HashUtil.sha512Hex(plain);
-        LinkedMultiValueMap body = new LinkedMultiValueMap();
-        body.add((Object)"key", (Object)finalKey);
-        body.add((Object)"txnid", (Object)req.getTxnid());
-        body.add((Object)"hash", (Object)hash);
+        LinkedMultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        body.add("key", finalKey);
+        body.add("txnid", req.getTxnid());
+        body.add("hash", hash);
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-        HttpEntity entity = new HttpEntity((Object)body, (MultiValueMap)headers);
-        ResponseEntity response = this.restTemplate.exchange(this.transactionV2Url, HttpMethod.POST, entity, Map.class, new Object[0]);
+        HttpEntity<LinkedMultiValueMap<String, Object>> entity = new HttpEntity<>(body, headers);
+        ResponseEntity<Map<String, Object>> response = this.restTemplate.exchange(this.transactionV2Url, HttpMethod.POST, entity, (Class<Map<String, Object>>) (Class<?>) Map.class, new Object[0]);
         EasebuzzLogger.log("V2 Transaction - SUCCESS", req, hash, body, this.transactionV2Url, response.getBody());
         this.dbLogger.saveLog(finalKey, finalSalt, req, hash, body, this.transactionV2Url, response.getBody());
-        return (Map)response.getBody();
+        return response.getBody();
     }
 
     public Map<String, Object> getTransactionV2ByDate(TransactionV2ByDateRequest req) {
@@ -131,7 +131,7 @@ public class TransactionService {
         String startDate = req.getDate_range().getStart_date();
         String endDate = req.getDate_range().getEnd_date();
         String hashValue = "";
-        boolean bl = tokenMode = req.getToken() != null && !req.getToken().trim().isEmpty();
+        tokenMode = req.getToken() != null && !req.getToken().trim().isEmpty();
         if (!tokenMode) {
             String plain = String.join((CharSequence)"|", finalKey, req.getMerchant_email(), startDate, endDate, finalSalt);
             hashValue = HashUtil.sha512Hex(plain);
@@ -152,10 +152,10 @@ public class TransactionService {
         }
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity entity = new HttpEntity(body, (MultiValueMap)headers);
-        ResponseEntity response = this.restTemplate.exchange(this.transactionV2DateUrl, HttpMethod.POST, entity, Map.class, new Object[0]);
+        HttpEntity<LinkedHashMap<String, Object>> entity = new HttpEntity<>(body, headers);
+        ResponseEntity<Map<String, Object>> response = this.restTemplate.exchange(this.transactionV2DateUrl, HttpMethod.POST, entity, (Class<Map<String, Object>>) (Class<?>) Map.class, new Object[0]);
         EasebuzzLogger.log("V2 By Date Transaction", req, hashValue, body, this.transactionV2DateUrl, response.getBody());
         this.dbLogger.saveLog(finalKey, finalSalt, req, hashValue, body, this.transactionV2DateUrl, response.getBody());
-        return (Map)response.getBody();
+        return response.getBody();
     }
 }

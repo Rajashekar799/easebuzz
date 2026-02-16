@@ -1,6 +1,7 @@
 package com.sabbpe.easebuzz.services;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sabbpe.easebuzz.dto.FrontendPaymentRequest;
 import com.sabbpe.easebuzz.dto.InitiateRequest;
 import com.sabbpe.easebuzz.models.EasebuzzPaymentCallback;
 import com.sabbpe.easebuzz.repositories.EasebuzzPaymentCallbackRepository;
@@ -113,9 +114,31 @@ public class PaymentService {
     }
 
     /* ============================================================
-       CALLBACK HANDLING (CORRECT HASH + IDEMPOTENT)
+       FRONTEND INITIATE
        ============================================================ */
+    public Map<String, Object> initiatePaymentFromFrontend(
+            FrontendPaymentRequest frontendRequest) {
 
+        InitiateRequest request = new InitiateRequest();
+
+        String txnId = "TXN" + System.currentTimeMillis();
+
+        request.setTxnid(txnId);
+        request.setAmount(frontendRequest.getAmount());
+        request.setProductinfo("Test Product");
+        request.setFirstname(frontendRequest.getName());
+        request.setEmail(frontendRequest.getEmail());
+        request.setPhone(frontendRequest.getPhone());
+
+        request.setSurl("http://localhost:8080/api/payments/easebuzz/callback");
+        request.setFurl("http://localhost:8080/api/payments/easebuzz/callback");
+
+        return initiatePayment(request);
+    }
+
+    /* ============================================================
+       CALLBACK HANDLING
+       ============================================================ */
     @Transactional
     public void processCallback(Map<String, String> callbackData) {
 
@@ -136,14 +159,11 @@ public class PaymentService {
         String productinfo = safe(callbackData.get("productinfo")).trim();
         String amount = safe(callbackData.get("amount")).trim();
 
-        log.info("Processing callback txnId={}, status={}", txnId, status);
-
         boolean hashValid = false;
         String calculatedHash = "";
 
         if (merchantKey.equals(key)) {
 
-            // ✅ CORRECT RESPONSE HASH FORMAT
             String reverseHash = String.join("|",
                     salt.trim(),
                     status,
@@ -166,51 +186,54 @@ public class PaymentService {
             );
 
             calculatedHash = HashUtil.sha512Hex(reverseHash);
-
             hashValid = calculatedHash.trim()
                     .equalsIgnoreCase(receivedHash.trim());
-
-            log.info("Reverse String: {}", reverseHash);
-            log.info("Calculated Hash: {}", calculatedHash);
-            log.info("Received Hash: {}", receivedHash);
         }
 
-        // ✅ CORRECT STATUS CHECK (Easebuzz uses 1 for success)
-  String finalPaymentStatus;
+        String finalPaymentStatus;
 
-if (!hashValid) {
-    finalPaymentStatus = "HASH_MISMATCH";
-}
-else {
+        if (!hashValid) {
+            finalPaymentStatus = "HASH_MISMATCH";
+        } else {
+            switch (status.toLowerCase()) {
 
-    switch (status.toLowerCase()) {
+                case "success":
+                    finalPaymentStatus = "SUCCESS";
+                    break;
 
-        case "success":
-            finalPaymentStatus = "SUCCESS";
-            break;
+                case "failure":
+                    finalPaymentStatus = "FAILED";
+                    break;
 
-        case "failure":
-            finalPaymentStatus = "FAILED";
-            break;
+                case "usercancelled":
+                case "cancel":
+                    finalPaymentStatus = "CANCELLED";
+                    break;
 
-        case "usercancelled":
-        case "cancel":
-            finalPaymentStatus = "CANCELLED";
-            break;
+                case "timeout":
+                    finalPaymentStatus = "TIMEOUT";
+                    break;
 
-        case "timeout":
-            finalPaymentStatus = "TIMEOUT";
-            break;
+                case "pending":
+                    finalPaymentStatus = "PENDING";
+                    break;
 
-        case "pending":
-            finalPaymentStatus = "PENDING";   // For delayed success/failure
-            break;
+                case "delayed_success":
+                    finalPaymentStatus = "DELAYED_SUCCESS";
+                    break;
 
-        default:
-            finalPaymentStatus = "UNKNOWN";
-    }
-}
+                case "delayed_failure":
+                    finalPaymentStatus = "DELAYED_FAILURE";
+                    break;
 
+                case "session_timeout":
+                    finalPaymentStatus = "SESSION_TIMEOUT";
+                    break;
+
+                default:
+                    finalPaymentStatus = "UNKNOWN";
+            }
+        }
 
         String rawResponse;
         try {
@@ -234,8 +257,6 @@ else {
             entity.setRawResponse(rawResponse);
             entity.setUpdatedAt(LocalDateTime.now());
 
-            log.info("Updating existing txnId={}", txnId);
-
         } else {
 
             entity = EasebuzzPaymentCallback.builder()
@@ -253,8 +274,6 @@ else {
                     .createdAt(LocalDateTime.now())
                     .updatedAt(LocalDateTime.now())
                     .build();
-
-            log.info("Creating new callback record txnId={}", txnId);
         }
 
         callbackRepository.save(entity);

@@ -109,7 +109,7 @@ public class TransactionV1ByDate {
 
     @Generated
     public int hashCode() {
-        int PRIME = 59;
+        // ...existing code...
         int result = 1;
         String $merchant_key = this.getMerchant_key();
         result = result * 59 + ($merchant_key == null ? 43 : $merchant_key.hashCode());

@@ -9,6 +9,7 @@
  */
 package com.sabbpe.easebuzz.controllers;
 
+import com.sabbpe.easebuzz.dto.FrontendPaymentRequest;
 import com.sabbpe.easebuzz.dto.InitiateRequest;
 import com.sabbpe.easebuzz.services.PaymentService;
 import java.util.Map;
@@ -27,12 +28,10 @@ public class PaymentController {
     }
 
     @PostMapping(value={"/initiateLink"})
-    public Map<String, Object> initiatePayment(@RequestBody InitiateRequest request) {
-        try {
-            return this.paymentService.initiatePayment(request);
-        }
-        catch (Exception e) {
-            throw new RuntimeException("Error initiating payment: " + e.getMessage());
-        }
-    }
+    public Map<String, Object> initiatePayment(
+        @RequestBody InitiateRequest request)
+{
+    return paymentService.initiatePayment(request);
+}
+
 }

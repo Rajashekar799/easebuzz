@@ -1,6 +1,7 @@
 com\sabbpe\easebuzz\controllers\PaymentController.class
 com\sabbpe\easebuzz\services\PaymentService.class
 com\sabbpe\easebuzz\controllers\RefundController.class
+com\sabbpe\easebuzz\dto\FrontendPaymentRequest.class
 com\sabbpe\easebuzz\repositories\EasebuzzLogRepository.class
 com\sabbpe\easebuzz\models\EasebuzzRequestResponse$EasebuzzRequestResponseBuilder.class
 com\sabbpe\easebuzz\models\EasebuzzRequestResponse.class
@@ -17,6 +18,7 @@ com\sabbpe\easebuzz\exceptions\InvalidHashException.class
 com\sabbpe\easebuzz\services\TransactionService.class
 com\sabbpe\easebuzz\models\ApiRequestLog.class
 com\sabbpe\easebuzz\models\EasebuzzPaymentCallback.class
+com\sabbpe\easebuzz\config\CorsConfig.class
 com\sabbpe\easebuzz\SabbpeEasebuzzApplication.class
 com\sabbpe\easebuzz\services\RefundService.class
 com\sabbpe\easebuzz\dto\RefundStatusRequest.class

@@ -125,7 +125,7 @@ public class RetrieveRequest {
 
     @Generated
     public int hashCode() {
-        int PRIME = 59;
+        // ...existing code...
         int result = 1;
         String $key = this.getKey();
         result = result * 59 + ($key == null ? 43 : $key.hashCode());
